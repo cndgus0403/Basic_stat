@@ -8,4 +8,3 @@ y = np.arange(10)
 plt.plot(x,y)
 plt.xlabel("Print")
 plt.show()
-
