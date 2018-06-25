@@ -1,2 +1,3 @@
-# Financial-data-analysis(금융데이터분석)
-## 주가 데이터 
+# 금융 데이터 분석
+
+## 주가 데이터 (stock price data)
