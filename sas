@@ -1,11 +1,14 @@
-<steps and sentences>
+<Fundamental SAS>
 
+1. steps and sentences
 - Data step
 - proc step 
 
-<libraries>
-libname project 'C:\workshop\winsas\lwcrb';
+테이블 = 파일명, 라이브러리 = 폴더명
 
+<libraries>
+
+libname project 'C:\workshop\winsas\lwcrb';>> library 생성
 libname libref clear; >> sas library 제거
 libname libref "다른경로" >> library 경로 변경 
 
@@ -35,7 +38,7 @@ data work.newprice;
      saleprice = price * 0.75
 run;
 
-<DATA Step Execution>?
+<DATA Step Execution>
 input data set > PDV(Program Data Vector) 
 > Output Data Set
 
