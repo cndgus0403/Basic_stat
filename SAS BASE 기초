@@ -1,0 +1,258 @@
+/* SAS programming - base sas 기초 */
+
+/* 1. Reading sas data sets */
+/* 
+LIBNAME libref ‘SAS-data-library’;
+DATA output-SAS-data-set;
+            SET input-SAS-data-set;
+            WHERE where-expression;
+            KEEP variable-list;
+            LABEL variable=’label’
+                        variable=’label’
+                        variable=’label’;
+            FORMAT variable(s) format;
+RUN;
+- libname 문장 > 라이브러리 생성 
+- data 문장  >> 출력할 테이블 
+- set 문장 >> 테이블 불러오기 
+- run 문장 >> 실행 종료 
+- where 문장 >> 관측치를 제어할 때
+- keep/drop 문장 >> 유지 / 제외
+*/
+
+/* where 및 label 연습 */
+data test;
+	set sashelp.classfit;
+	drop height; /* keep/drop */
+	where age > 14 and weight >80;
+	label name='이름' sex='성별' 
+	age='나이' weight='몸무게';
+run;
+/* label proc print에서 옵션에서 사용 가능*/
+proc print data = test label;
+run;
+
+/* 포맷팅 ~ 시험 보기 전에 집중 암기할 것(참고할 것)*/
+/* 숫자, 문자, 날짜 포맷*/
+data test;
+input name: $12. age per date;
+cards;
+라이올라 123456 0.324568 1000
+;
+run;
+
+/*숫자*/
+proc print data =test;
+var age per;
+format age 6.;
+format per best8.;
+format per percent8.2
+;
+run;
+/* 문자 */
+proc print data =test;
+var name;
+format name $16.;
+run;
+
+/*날짜*/
+proc print data =test;
+var name age date;
+format date Time8.;
+run;
+
+/*2. 외부데이터 불러오기 ~ 데이터 가져오기 마법사 이용하면 편리*/
+/* 1 - txt 파일 */
+
+%web_drop_table(WORK.IMPORT1);
+FILENAME REFFILE '/folders/myfolders/22.txt' encoding='ms-949';
+/* ms-949 한글로 읽음*/
+PROC IMPORT DATAFILE=REFFILE
+	DBMS=DLM
+	OUT=WORK.IMPORT1;
+	DELIMITER=",";
+	GETNAMES=no;
+RUN;
+
+PROC CONTENTS DATA=WORK.IMPORT1; RUN;
+%web_open_table(WORK.IMPORT1);
+
+/* 2 - csv 파일 */
+%web_drop_table(WORK.IMPORT2);
+FILENAME REFFILE '/folders/myfolders/1111.csv' encoding='ms-949';
+PROC IMPORT DATAFILE=REFFILE
+	DBMS=CSV
+	OUT=WORK.IMPORT2;
+	GETNAMES=NO;
+RUN;
+
+PROC CONTENTS DATA=WORK.IMPORT2; RUN;
+
+%web_open_table(WORK.IMPORT2);
+
+/* 3. raw data 읽어오기 */
+/*
+dlm ~ '구분자' 
+dsd 구분자들이 연속적으로 있을 경우 구분자 사이를 결측치로 처리하는 옵션
+예) 123,mike,,2019-06-24,best!
+encoding ~ 언어 설정
+*/
+data work.kids;
+infile '/folders/myfolders/22.txt' dlm="," dsd encoding='ms-949';
+input name: $10. age sex: $8.;
+run;
+
+/*<missover>
+기본형식: INFILE 'raw-data-file-name' missover;
+결측치가 있는 곳을 비워둘 수 있음
+*/
+data test;
+infile '/folders/myfolders/22.txt' dlm="," encoding='ms-949'
+missover;
+input name: $10. age sex: $8.;
+run;
+
+/*<length>
+기본형식: LENGTH variable(s) $ length 
+주의: 항상 input문 보다 앞서 시행되어야 한다.
+*/
+data test;
+infile '/folders/myfolders/22.txt' dlm="," encoding='ms-949';
+input name$ age sex$;
+run;
+
+proc contents data =test;
+run;
+/*<비교>*/
+data test2;
+length name $12 age sex $10;
+infile '/folders/myfolders/22.txt' dlm="," encoding='ms-949';
+input name$ age sex$;
+run;
+
+proc contents data =test2;
+run;
+
+/*3. proc print/freq/means/univariate */
+/*1 - proc print ~ var, where */
+data fit_test;
+	set sashelp.classfit;
+run; /* 연습을 데이터 로드 */
+
+proc print data = fit_test(obs=20);
+	var name sex age height predict;
+	where sex ^= "F";
+run;
+
+/*2 - proc freq*/
+proc freq data = fit_test nlevels; /*nlevels ~ 변수의 개수 표시*/
+	table sex age;
+run;
+
+/* proc means ~ 기술통계량*/
+proc means data = fit_test;
+var predict height;
+run;
+
+/* proc univariate ~ 결측값, 극관측치 등 요약된 기술통계량 */
+proc univariate data = fit_test;
+var predict weight;
+run;
+
+/* 변수 만들기 */
+data cars;
+	set sashelp.cars;
+run;
+
+data cars1; /* 변수 만들기 연습*/
+	set cars(keep= make model Type length);
+	bonus = 500;
+	gender = "M";
+	newleng = 1.2 * length;
+run;
+
+/*where vs if >> where 효율적인데 
+다양한 조건을 사용할려면 if가 유용 */
+data heart1;
+	set sashelp.heart;
+	where sex = "Female";
+run;
+
+data heart2;
+	set sashelp.heart;
+	where status ="Dead" and BP_status ="High";
+run;
+
+/* 테이블 합병 ~ set merge
+Appending >> a1 + a2 = a1
+concatenating >> a1 + a2 = a3
+[merge table1 table2]
+[by var] ~ 그 전에 proc sort가 되어 있어야 함 
+*/
+/*<reanme>*/
+data empscan;
+input first $ gender $ country $;
+cards;
+chang m china
+li m china
+ming f china
+;
+run;
+
+data empjp;
+input first $ gender $ region $;
+cards;
+cho f japan
+tomi m japan
+;
+run;
+
+/* rename 연습*/
+data empsall;
+ set empscan empjp(rename=(region = country));
+run;
+
+/* 데이터 전처리
+1. libanme 
+2. infile ~ dsd, dlm missover
+3. keep drop
+4. proc contents
+5. rename
+예제 */
+data test; 
+	set sashelp.class;
+	rename name = naming;
+run;
+/*
+6.sum */
+data test;
+	set sashelp.class;
+	sum_ = sum(height,weight);
+run;
+/*
+7. proc sort*/
+proc sort data = test;
+ by age height;
+run;
+/*8. first, last ??*/
+proc sort data = sashelp.bweight 
+out = test10;
+by black;
+run;
+proc freq data =test10;
+	table black;
+run;
+/*
+9.merge 
+10.proc univariate*/
+proc univariate data= test10;
+class black;
+var weight;
+output out= work.black_group;
+run;
+/*
+11.if then else ~ 데이터를 조건별로 그룹화하는 코딩
+12. 숫자변수 > 문자변수: put(var,자리수) 
+13. 문자변수 > 숫자변수: input(var, 자리수)
+14. substr: substr(var, 추출 시작 자리수, 추출 마지막 자리수)
+*/
