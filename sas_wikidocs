@@ -1,0 +1,94 @@
+/* SAS Open learning ~ wikidocs*/
+
+/*
+sashelp.class 
+sashelp >> 라이브러리(폴더) class >> 테이블(파일) 
+*/
+
+/* 1. library 생성법 */
+libname df "C:\Users\cndgu\Desktop\
+SASUniversityEdition\myfolders\sasuser.v94";
+libname df clear;
+
+/* 2. proc 사용법 */
+/* proc sort 순서대로 정렬하기 */ 
+proc sort data=sashelp.class out=test;
+	by descending age;
+run;
+
+/* proc print 테이블 보여주기 */ 
+proc print data=sashelp.class;
+run;
+
+proc print data=sashelp.class;
+	var age name;
+run;
+
+/* proc contents 테이블 속성보기 */
+proc contents data=sashelp.class;
+run;
+
+/*라이브러리 전체 속성 */
+proc contents data=work._ALL_; 
+run;
+
+/* PROC FREQ(빈도 조회) */
+proc freq data=sashelp.class;
+table age name;
+run;
+
+proc freq data= sashelp.class;
+table age*height;
+run;
+
+/* 3. 데이터 생성법  */
+/* 1-직접 테이터 생성법 */
+data test;
+input name: $24. age sex $;
+cards; 
+OK 1 남
+you 2 여
+호날두화이팅 3 남
+;	
+run;
+/*2-외부 데이터 불러와서 테이블 생성 */
+/*3- 테이블 불러와서 새 테이블 생성*/
+data test; 
+set sashelp.class;
+run;
+
+/* 데이터 전처리!!! */
+data test;
+set sashelp.class(keep=name age);
+run;
+
+data test;
+set sashelp.class(drop = name age);
+run;
+
+data test(keep=name age);
+set sashelp.class;
+run;
+
+/* 수식을 활용한 계산 */
+data test;
+set sashelp.class;
+age2 = age + 1;
+run;
+
+data test;
+set sashelp.class;
+age +1;
+age2 = age + 1;
+run;	
+/* 단순if구문 */
+data test;
+set sashelp.class;
+if age>=12;
+run;
+
+data test;
+set sashelp.class;
+if NAME='Philip';
+run;
+
